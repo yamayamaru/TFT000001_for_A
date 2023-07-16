@@ -43,7 +43,7 @@
 
 
 // ILI9486の場合に宣言、ILI9341の場合はコメントアウト
-//#define TFT000001_ILI9486_DISPLAY
+#define TFT000001_ILI9486_DISPLAY
 
 
 

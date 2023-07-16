@@ -77,7 +77,7 @@ void setup() {
 
 void loop() {
 
-  printf1("Benchmark                Time (microseconds)\r\n");
+  printf1("Benchmark                Time (milliseconds)\r\n");
   delay(10);
   printf1("Screen fill              ");
   printf1("%lld\r\n", testFillScreen());
