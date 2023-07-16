@@ -1,5 +1,5 @@
 // TFT000001.h
-// Version : 0.0.2
+// Version : 0.0.4
 //
 //    ILI9486, ILI9341 LCD Graphics Library for Raspberry Pi Pico Arduino and Teensy 4.x Arduino
 //                                         https://twitter.com/yama23238
@@ -37,6 +37,10 @@
 #include <string.h>
 
 #include "TFT000001_config.h"
+
+#if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+#define TFT000001_ARDUINO_SPI
+#endif
 
 #ifdef TFT000001_RP2040_PIO_8BIT_PARALELL
   #include "hardware/pio.h"
@@ -764,6 +768,36 @@ void (TFT000001::*T000001_teensy4x_write_8bit_parallel2)(uint16_t c);
 void (TFT000001::*T000001_teensy4x_write_8bit_parallel3)(uint32_t c);
 void T000001_teensy4x_setup_8bit_parallel();
 #endif  // TFT000001_TEENSY4x_8BIT_PARALELL
+
+
+
+
+#if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+R_PORT0_Type *r_port_n_number_cs, *r_port_n_number_dc;
+uint32_t r_port_n_pin_mask_cs, r_port_n_pin_mask_not_cs, r_port_n_pin_mask_dc, r_port_n_pin_mask_not_dc;
+__IOM uint16_t *r_port_n_podr01_cs, *r_port_n_podr01_dc;
+R_PORT0_Type *r_port_n[10] = {R_PORT0, R_PORT1, R_PORT2, R_PORT3, R_PORT4, R_PORT5, R_PORT6, R_PORT7, R_PORT8, R_PORT9};
+
+void digitalWrite_01(uint8_t pin_no, uint8_t value);
+void set_pin_no_cs(uint8_t pin_no);
+void set_pin_no_dc(uint8_t pin_no);
+inline void pin_set_cs(void);
+inline void pin_clear_cs(void);
+inline void pin_set_dc(void);
+inline void pin_clear_dc(void);
+
+
+
+#define SPI_WRITE_BUFFER_SIZE_ARDUINO_UNO_R4 1024
+
+uint8_t spi_write_buffer01[SPI_WRITE_BUFFER_SIZE_ARDUINO_UNO_R4];
+int32_t spi_write_buffer_pos01 = 0;
+
+inline int32_t spi_buffer_num_arduino_uno_r4();
+inline void spi_buffer_write_arduino_uno_r4(uint8_t byte);
+void spi_write_buffer_flush_arduino_uno_r4();
+
+#endif
 
 
 

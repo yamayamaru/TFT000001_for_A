@@ -1,5 +1,5 @@
 // TFT000001.cpp
-// Version : 0.0.2
+// Version : 0.0.4
 //
 //    ILI9486, ILI9341 LCD Graphics Library for Raspberry Pi Pico Arduino and Teensy 4.x Arduino
 //                                         https://twitter.com/yama23238
@@ -1484,6 +1484,14 @@ const uint8_t yama_2_GFX_H_beta::web216_palette256_24_data[] = {
     _tft_wr  = -1;
     _tft_d0  = -1;
     _interface = TFT000001_HARDWARE_SPI_NO;
+
+    #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+        set_pin_no_dc(dc);
+        if (cs >= 0) {
+            set_pin_no_cs(cs);
+        }
+    #endif
+
     #ifdef TFT000001_ILI9486_DISPLAY
         _display_driver = TFT000001_ILI9486_DRIVER;
     #else
@@ -1527,7 +1535,12 @@ inline void TFT000001::gpio_dc_on(void){
     #endif
 
     #if defined(TFT000001_ARDUINO_SPI)
-        TFT000001_digitalWrite(_tft_dc, 0);
+        #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+            spi_write_buffer_flush_arduino_uno_r4();
+            pin_clear_dc();
+        #else
+            TFT000001_digitalWrite(_tft_dc, 0);
+        #endif
     #endif
 }
 
@@ -1543,9 +1556,15 @@ inline void TFT000001::gpio_dc_off(void){
     #endif
 
     #if defined(TFT000001_ARDUINO_SPI)
-        TFT000001_digitalWrite(_tft_dc, 1);
-    #endif    
+        #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+            spi_write_buffer_flush_arduino_uno_r4();
+            pin_set_dc();
+        #else
+            TFT000001_digitalWrite(_tft_dc, 1);
+        #endif
+    #endif
 }
+
 inline void TFT000001::gpio_rst_on(void){
     if (_tft_rst >= 0) {
 //        asm volatile("nop \n nop \n nop");
@@ -1577,7 +1596,11 @@ inline void TFT000001::gpio_cs_on(void){
 
 #if defined(TFT000001_ARDUINO_SPI)
     if (_tft_cs >= 0) {
-        TFT000001_digitalWrite(_tft_cs, 0);
+        #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+            pin_clear_cs();
+        #else
+            TFT000001_digitalWrite(_tft_cs, 0);
+        #endif
     }
 #endif
 }
@@ -1598,7 +1621,11 @@ inline void TFT000001::gpio_cs_off(void){
 
 #if defined(TFT000001_ARDUINO_SPI)
     if (_tft_cs >= 0) {
-        TFT000001_digitalWrite(_tft_cs, 1);
+        #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+            pin_set_cs();
+        #else
+            TFT000001_digitalWrite(_tft_cs, 1);
+        #endif
     }
 #endif
 }
@@ -1613,7 +1640,11 @@ inline void TFT000001::spi_write(uint8_t byte){
 #endif
 
 #if defined(TFT000001_RP2040_ARDUINO_SPI) || defined(TFT000001_TEENSY4x_ARDUINO_SPI) || defined(TFT000001_ARDUINO_SPI)
-    writedata(byte);
+    #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+        writedata(byte);
+    #else
+        writedata(byte);
+    #endif
 #endif
 }
 
@@ -1628,8 +1659,14 @@ inline void TFT000001::spi_write16_big(uint16_t word) {
 #endif
 
 #if defined(TFT000001_RP2040_ARDUINO_SPI) || defined(TFT000001_TEENSY4x_ARDUINO_SPI) || defined(TFT000001_ARDUINO_SPI)
-    _spi->transfer((uint8_t)(word >> 8));
-    _spi->transfer((uint8_t)word);
+    #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+        if (spi_buffer_num_arduino_uno_r4() < 2) spi_write_buffer_flush_arduino_uno_r4();
+        spi_buffer_write_arduino_uno_r4((uint8_t)(word >> 8));
+        spi_buffer_write_arduino_uno_r4((uint8_t)(word));
+    #else
+      _spi->transfer((uint8_t)(word >> 8));
+      _spi->transfer((uint8_t)word);
+    #endif
 #endif
 }
 
@@ -1645,9 +1682,16 @@ inline void TFT000001::spi_write24_big(uint32_t word) {
 #endif
 
 #if defined(TFT000001_RP2040_ARDUINO_SPI) || defined(TFT000001_TEENSY4x_ARDUINO_SPI) || defined(TFT000001_ARDUINO_SPI)
-    _spi->transfer((uint8_t)(word >> 16));
-    _spi->transfer((uint8_t)(word >> 8));
-    _spi->transfer((uint8_t)(word));
+    #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+        if (spi_buffer_num_arduino_uno_r4() < 3) spi_write_buffer_flush_arduino_uno_r4();
+        spi_buffer_write_arduino_uno_r4((uint8_t)(word >> 16));
+        spi_buffer_write_arduino_uno_r4((uint8_t)(word >> 8));
+        spi_buffer_write_arduino_uno_r4((uint8_t)(word));
+    #else
+        _spi->transfer((uint8_t)(word >> 16));
+        _spi->transfer((uint8_t)(word >> 8));
+        _spi->transfer((uint8_t)(word));
+    #endif
 #endif
 }
 
@@ -1672,6 +1716,9 @@ void TFT000001::spi_end() {
 #endif
 
 #if defined(TFT000001_RP2040_ARDUINO_SPI) || defined(TFT000001_TEENSY4x_ARDUINO_SPI) || defined(TFT000001_ARDUINO_SPI)
+    #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+        spi_write_buffer_flush_arduino_uno_r4();
+    #endif
     _spi->endTransaction();
     gpio_cs_off();
 #endif
@@ -1687,7 +1734,11 @@ inline void TFT000001::writedata(uint8_t byte){
 #endif
 
 #if defined(TFT000001_RP2040_ARDUINO_SPI) || defined(TFT000001_TEENSY4x_ARDUINO_SPI) || defined(TFT000001_ARDUINO_SPI)
-    _spi->transfer(byte);
+    #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+        spi_buffer_write_arduino_uno_r4(byte);
+    #else
+        _spi->transfer(byte);
+    #endif
 #endif
 }
 
@@ -3693,6 +3744,78 @@ void TFT000001::invertDisplay(bool i) {
     spi_end();
 }
 
+
+
+
+#if defined(TFT000001_ARDUINO_UNO_R4_SPI)
+void TFT000001::digitalWrite_01(uint8_t pin_no, uint8_t value) {
+  if (value != (uint8_t)0) {
+    r_port_n[g_pin_cfg[pin_no].pin >> 8]->PODR = (1 << (g_pin_cfg[pin_no].pin & 0xff)) | (r_port_n[g_pin_cfg[pin_no].pin >> 8]->PODR);
+  } else {
+    r_port_n[g_pin_cfg[pin_no].pin >> 8]->PODR = ~((uint32_t)((uint32_t)1 << (g_pin_cfg[pin_no].pin & 0xff))) & (r_port_n[g_pin_cfg[pin_no].pin >> 8]->PODR);
+  }
+}
+
+
+void TFT000001::set_pin_no_cs(uint8_t pin_no) {
+  r_port_n_number_cs = r_port_n[g_pin_cfg[pin_no].pin >> 8];
+  r_port_n_pin_mask_cs = 1 << (g_pin_cfg[pin_no].pin & 0xff);
+  r_port_n_pin_mask_not_cs = ~r_port_n_pin_mask_cs;
+  r_port_n_podr01_cs = &(r_port_n_number_cs->PODR);
+}
+
+void TFT000001::set_pin_no_dc(uint8_t pin_no) {
+  r_port_n_number_dc = r_port_n[g_pin_cfg[pin_no].pin >> 8];
+  r_port_n_pin_mask_dc = 1 << (g_pin_cfg[pin_no].pin & 0xff);
+  r_port_n_pin_mask_not_dc = ~r_port_n_pin_mask_dc;
+  r_port_n_podr01_dc = &(r_port_n_number_dc->PODR);
+}
+
+inline void TFT000001::pin_set_cs(void) {
+//  r_port_n_number_cs_->PODR = (1 << r_port_n_pin_mask_cs) | r_port_n_number_cs->PODR;
+  *r_port_n_podr01_cs = r_port_n_pin_mask_cs | *r_port_n_podr01_cs;
+}
+
+inline void TFT000001::pin_clear_cs(void) {
+//  r_port_n_number_cs->PODR = ~((uint32_t)((uint32_t)1 << r_port_n_pin_mask_cs)) & r_port_n_number_cs->PODR;
+  *r_port_n_podr01_cs = r_port_n_pin_mask_not_cs & *r_port_n_podr01_cs;
+}
+inline void TFT000001::pin_set_dc(void) {
+//  r_port_n_number_dc_->PODR = (1 << r_port_n_pin_mask_dc) | r_port_n_number_dc->PODR;
+  *r_port_n_podr01_dc = r_port_n_pin_mask_dc | *r_port_n_podr01_dc;
+}
+
+inline void TFT000001::pin_clear_dc(void) {
+//  r_port_n_number_dc->PODR = ~((uint32_t)((uint32_t)1 << r_port_n_pin_mask_dc)) & r_port_n_number_dc->PODR;
+  *r_port_n_podr01_dc = r_port_n_pin_mask_not_dc & *r_port_n_podr01_dc;
+}
+
+
+
+
+inline int32_t TFT000001::spi_buffer_num_arduino_uno_r4(){
+  return (SPI_WRITE_BUFFER_SIZE_ARDUINO_UNO_R4 - spi_write_buffer_pos01);
+}
+
+inline void TFT000001::spi_buffer_write_arduino_uno_r4(uint8_t byte) {
+  spi_write_buffer01[spi_write_buffer_pos01++] = byte;
+  if (spi_write_buffer_pos01 >= SPI_WRITE_BUFFER_SIZE_ARDUINO_UNO_R4) {
+      spi_write_buffer_flush_arduino_uno_r4();
+  }
+}
+
+void TFT000001::spi_write_buffer_flush_arduino_uno_r4() {
+
+  if (spi_write_buffer_pos01 > 0) {
+    uint8_t *buffer = (uint8_t *)spi_write_buffer01;
+    size_t count = spi_write_buffer_pos01;
+
+    _spi->transfer(buffer, count);
+
+    spi_write_buffer_pos01 = 0;
+  }
+}
+#endif    // #if defined(TFT000001_ARDUINO_UNO_R4_SPI)
 
 // -------------------------------------------------------------------------
  

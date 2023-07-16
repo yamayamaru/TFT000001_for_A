@@ -1,11 +1,21 @@
 # TFT000001_for_A
 
 このプログラムはTFT000001のArduino移植版です。    
-Teensy 4.xやRaspberry Pi Picoを使ってILI9341とILI9486のLCDにグラフィックスを描画するプログラムです。    
+Teensy 4.xやRaspberry Pi Pico、Arduino UNO R4を使ってILI9341とILI9486のLCDにグラフィックスを描画するプログラムです。    
 まだ、文字表示には対応してません。    
 一応Arduino互換機一般にも対応してます(ただし、AVRのArduinoでは動作しません)。    
 Teensy 4.xで使いたくてArduinoに移植したのでRaspberry Pi PicoとArduino互換機一般への対応はおまけです。    
+新しく、Arduino UNO R4のSPIにも対応しました    
 (TFT000001はもともとRaspberry Pi Picoのpico-sdk用のライブラリなのでおまけとはいってもそれなりの対応にはなってると思います。)    
+Windowsの場合はC:\Users\username\Documents\Arduino\librariesにコピーすれば使えると思います    
+(ここでusernameの部分はWindowsのユーザ名を指定してください)    
+    
+TFT000001_config.hでLCDの種類、機種やインターフェースの種類などを    
+コメントアウトしたりコメントアウトを外したりして設定をしてから利用する必要があります。    
+    
+examplesでILI9486、ILI9341の種類や機種、インターフェースによって    
+それぞれに対応したTFT000001_config.hを作成してありますので    
+そのTFT000001_config.hの内容をライブラリのフォルダのsrcフォルダへコピーしてください。    
     
 Raspberry Pi Picoのみ直接レジスタアクセスでSPIを操作するモードを追加しました。    
 Raspberry Pi Picoの場合、ArduinoのSPIの関数ででSPIを操作すると非常に遅いので    
@@ -22,13 +32,6 @@ ILI9341ではSPIのみの対応で16bitカラーになります。
 Teensy 4.xの8bitパラレルでは2種類のピン設定の中から選択する形で使用するピンは固定になります。    
 Raspberry Pi Picoの8bitパラレルではD0で指定したピンから連続する8本のピンが    
 8bitパラレルのbit0からbit7に対応します。    
-    
-TFT000001_config.hでLCDの種類、機種やインターフェースの種類などを    
-コメントアウトしたりコメントアウトを外したりして設定をしてから利用する必要があります。    
-    
-examplesでILI9486、ILI9341の種類や機種、インターフェースによって    
-それぞれに対応したTFT000001_config.hを作成してありますので    
-そのTFT000001_config.hの内容をライブラリのフォルダのsrcフォルダへコピーしてください。    
     
 接続に関してはILI9486の8bitパラレルではLCD側のRDはVCCへ、LCD側のCSはGNDへ接続してください。    
 また、WRが8bitパラレルのbit0からbit7の信号線やDCの信号線などと干渉しやすいようなので    

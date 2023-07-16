@@ -1,40 +1,25 @@
 #include "TFT000001.h"
 
-#ifdef TFT000001_TEENSY4x_8BIT_PARALELL
-  #define TFT_WR  14
-  #define TFT_DC  16
-  #define TFT_RST 17
-  //#define TFT_WR  2
-  //#define TFT_DC  14
-  //#define TFT_RST 3
+#ifdef TFT000001_ARDUINO_SPI
+  #define TFT_SCK  PIN_SPI_SCK
+  #define TFT_MISO PIN_SPI_MISO
+  #define TFT_MOSI PIN_SPI_MOSI
+  #define TFT_CS   PIN_SPI_CS
 
-  #define TFT_D0  2
-  // bit0からbit7は決め打ち
-  // bit0   2  (Pin番号)
-  // bit1   3  (Pin番号)
-  // bit2   4  (Pin番号)
-  // bit3   5  (Pin番号)
-  // bit4   6  (Pin番号)
-  // bit5   9  (Pin番号)
-  // bit6   8  (Pin番号)
-  // bit7   7  (Pin番号)
-
-  //#define TFT_D0 19
-  // bit0からbit7は決め打ち
-  // bit0  19  (Pin番号)
-  // bit1  18  (Pin番号)
-  // bit2  17  (Pin番号)
-  // bit3  16  (Pin番号)
-  // bit4  22  (Pin番号)
-  // bit5  23  (Pin番号)
-  // bit6  20  (Pin番号)
-  // bit7  21  (Pin番号)
+  #define TFT_DC    9           // digitalWrite()が使える任意のピンを設定してください。
+  #define TFT_RST   8           // digitalWrite()が使える任意のピンを設定してください。
 #endif
 
-#ifdef TFT000001_TEENSY4x_8BIT_PARALELL
-  TFT000001 tft = TFT000001(TFT_D0, TFT_WR, TFT_DC, TFT_RST, -1);
+#ifdef TFT000001_ARDUINO_SPI
+    #include "SPI.h"
+    #define SPI01 SPI
+    const int tft_frequency = 32000000;
+    SPISettings spi_settings01 = SPISettings(tft_frequency, MSBFIRST, SPI_MODE0);
 #endif
 
+#ifdef TFT000001_ARDUINO_SPI
+  TFT000001 tft = TFT000001(spi_settings01, &SPI01, TFT_DC, TFT_RST, TFT_CS);
+#endif
 
 unsigned long long testFillScreen();
 unsigned long long testLines(uint16_t color);
@@ -65,6 +50,8 @@ void setup() {
 
   tft.INIT_TFT_DATA_BUS();
 
+  SPI01.begin();
+
   delay(100); 
   Serial.println("\r\nReset:");
 
@@ -80,46 +67,46 @@ void loop() {
   printf1("Benchmark                Time (milliseconds)\r\n");
   delay(10);
   printf1("Screen fill              ");
-  printf1("%lld\r\n", testFillScreen());
+  printf1("%ld\r\n", (long)testFillScreen());
   delay(500);
 
   printf1("Lines                    ");
-  printf1("%lld\r\n", testLines(TFT000001_ILI9341_CYAN));
+  printf1("%ld\r\n", (long)testLines(TFT000001_ILI9341_CYAN));
   delay(500);
 
   printf1("Horiz/Vert Lines         ");
-  printf1("%lld\r\n", testFastLines(TFT000001_ILI9341_RED, TFT000001_ILI9341_BLUE));
+  printf1("%ld\r\n", (long)testFastLines(TFT000001_ILI9341_RED, TFT000001_ILI9341_BLUE));
   delay(500);
 
   printf1("Rectangles (outline)     ");
-  printf1("%lld\r\n", testRects(TFT000001_ILI9341_GREEN));
+  printf1("%ld\r\n", (long)testRects(TFT000001_ILI9341_GREEN));
   delay(500);
 
   printf1("Rectangles (filled)      ");
-  printf1("%lld\r\n", testFilledRects(TFT000001_ILI9341_YELLOW, TFT000001_ILI9341_MAGENTA));
+  printf1("%ld\r\n", (long)testFilledRects(TFT000001_ILI9341_YELLOW, TFT000001_ILI9341_MAGENTA));
   delay(500);
 
   printf1("Circles (filled)         ");
-  printf1("%lld\r\n", testFilledCircles(10, TFT000001_ILI9341_MAGENTA));
+  printf1("%ld\r\n", (long)testFilledCircles(10, TFT000001_ILI9341_MAGENTA));
 
   printf1("Circles (outline)        ");
-  printf1("%lld\r\n", testCircles(10, TFT000001_ILI9341_WHITE));
+  printf1("%ld\r\n", (long)testCircles(10, TFT000001_ILI9341_WHITE));
   delay(500);
 
   printf1("Triangles (outline)      ");
-  printf1("%lld\r\n", testTriangles());
+  printf1("%ld\r\n", (long)testTriangles());
   delay(500);
 
   printf1("Triangles (filled)       ");
-  printf1("%lld\r\n", testFilledTriangles());
+  printf1("%ld\r\n", (long)testFilledTriangles());
   delay(500);
 
   printf1("Rounded rects (outline)  ");
-  printf1("%lld\r\n", testRoundRects());
+  printf1("%ld\r\n", (long)testRoundRects());
   delay(500);
 
   printf1("Rounded rects (filled)   ");
-  printf1("%lld\r\n", testFilledRoundRects());
+  printf1("%ld\r\n", (long)testFilledRoundRects());
   delay(500);
 
   printf1("Done!\r\n");
